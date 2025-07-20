@@ -55,14 +55,15 @@ def predict():
         print(f"❌ Error en predicción: {e}")
         return jsonify({"error": "No se pudo procesar la predicción."}), 500
 
-@app.route('/servicios', methods=['GET'])
-def get_servicios():
-    try:
-        servicios_disponibles = list(mlb.classes_)
-        return jsonify({"servicios": servicios_disponibles})
-    except Exception as e:
-        print(f"❌ Error al obtener servicios: {e}")
-        return jsonify({"error": "No se pudieron obtener los servicios."}), 500
+# 🚫 Endpoint comentado para no usarlo
+# @app.route('/servicios', methods=['GET'])
+# def get_servicios():
+#     try:
+#         servicios_disponibles = list(mlb.classes_)
+#         return jsonify({"servicios": servicios_disponibles})
+#     except Exception as e:
+#         print(f"❌ Error al obtener servicios: {e}")
+#         return jsonify({"error": "No se pudieron obtener los servicios."}), 500
 
 if __name__ == '__main__':
     app.run(debug=True)
