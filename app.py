@@ -5,7 +5,7 @@ import pandas as pd
 
 # Inicializar app
 app = Flask(__name__)
-CORS(app)  # Habilita CORS para que pueda ser llamado desde React
+CORS(app)
 
 # Cargar modelo y codificador
 modelo = joblib.load("modelo_sin_costo_extra.pkl")
@@ -24,15 +24,12 @@ def predict():
         modelo_vehiculo = data['modelo']
         servicios = data['servicios']
 
-        # Preprocesar entrada
         marca_modelo = f"{marca}_{modelo_vehiculo}"
         num_servicios = len(servicios)
 
-        # Codificar servicios como OneHot
         servicios_array = mlb.transform([servicios])
         servicios_df = pd.DataFrame(servicios_array, columns=mlb.classes_)
 
-        # Construir input del modelo
         input_df = pd.DataFrame([{
             "marca": marca,
             "modelo": modelo_vehiculo,
@@ -40,10 +37,8 @@ def predict():
             "num_servicios": num_servicios
         }])
 
-        # Combinar con codificación de servicios
         input_completo = pd.concat([input_df, servicios_df], axis=1)
 
-        # Predecir
         total_estimado = modelo.predict(input_completo)[0]
 
         return jsonify({"total_estimado": round(float(total_estimado), 2)})
@@ -51,6 +46,15 @@ def predict():
     except Exception as e:
         print(f"❌ Error en predicción: {e}")
         return jsonify({"error": "No se pudo procesar la predicción."}), 500
+
+@app.route('/servicios', methods=['GET'])
+def get_servicios():
+    try:
+        servicios_disponibles = list(mlb.classes_)
+        return jsonify({"servicios": servicios_disponibles})
+    except Exception as e:
+        print(f"❌ Error al obtener servicios: {e}")
+        return jsonify({"error": "No se pudieron obtener los servicios."}), 500
 
 if __name__ == '__main__':
     app.run(debug=True)
