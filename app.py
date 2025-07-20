@@ -13,7 +13,15 @@ mlb = joblib.load("servicios_encoder.pkl")
 
 @app.route('/')
 def index():
-    return jsonify({"message": "API de predicción activa."})
+    try:
+        servicios_disponibles = list(mlb.classes_)
+        return jsonify({
+            "mensaje": "Servicios disponibles para predicción",
+            "servicios": servicios_disponibles
+        })
+    except Exception as e:
+        print(f"❌ Error al obtener servicios: {e}")
+        return jsonify({"error": "No se pudieron obtener los servicios."}), 500
 
 @app.route('/predict', methods=['POST'])
 def predict():
