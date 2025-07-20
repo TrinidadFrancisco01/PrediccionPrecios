@@ -11,10 +11,15 @@ CORS(app)
 modelo = joblib.load("modelo_sin_costo_extra.pkl")
 mlb = joblib.load("servicios_encoder.pkl")
 
+# Servicios a excluir de la respuesta
+SERVICIOS_EXCLUIDOS = {"Cambio de Amortiguadores"}
+
 @app.route('/')
 def index():
     try:
-        servicios_disponibles = list(mlb.classes_)
+        servicios_disponibles = [
+            s for s in mlb.classes_ if s not in SERVICIOS_EXCLUIDOS
+        ]
         return jsonify({
             "mensaje": "Servicios disponibles para predicción",
             "servicios": servicios_disponibles
@@ -31,6 +36,12 @@ def predict():
         marca = data['marca']
         modelo_vehiculo = data['modelo']
         servicios = data['servicios']
+
+        # Validar si se intenta enviar un servicio excluido
+        if any(servicio in SERVICIOS_EXCLUIDOS for servicio in servicios):
+            return jsonify({
+                "error": "Uno o más servicios no están disponibles para cotización."
+            }), 400
 
         marca_modelo = f"{marca}_{modelo_vehiculo}"
         num_servicios = len(servicios)
@@ -55,15 +66,16 @@ def predict():
         print(f"❌ Error en predicción: {e}")
         return jsonify({"error": "No se pudo procesar la predicción."}), 500
 
-# 🚫 Endpoint comentado para no usarlo
-# @app.route('/servicios', methods=['GET'])
-# def get_servicios():
-#     try:
-#         servicios_disponibles = list(mlb.classes_)
-#         return jsonify({"servicios": servicios_disponibles})
-#     except Exception as e:
-#         print(f"❌ Error al obtener servicios: {e}")
-#         return jsonify({"error": "No se pudieron obtener los servicios."}), 500
+@app.route('/servicios', methods=['GET'])
+def get_servicios():
+    try:
+        servicios_disponibles = [
+            s for s in mlb.classes_ if s not in SERVICIOS_EXCLUIDOS
+        ]
+        return jsonify({"servicios": servicios_disponibles})
+    except Exception as e:
+        print(f"❌ Error al obtener servicios: {e}")
+        return jsonify({"error": "No se pudieron obtener los servicios."}), 500
 
 if __name__ == '__main__':
     app.run(debug=True)
